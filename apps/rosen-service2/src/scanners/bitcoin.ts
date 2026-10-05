@@ -22,7 +22,12 @@ import type { TokenMap } from '@rosen-bridge/extended-tokens';
 import type { DataSource } from '@rosen-bridge/extended-typeorm';
 
 import { configs } from '../configs';
-import { BITCOIN_METHOD_ESPLORA, BITCOIN_METHOD_RPC } from '../constants';
+import {
+  BITCOIN_METHOD_ESPLORA,
+  BITCOIN_METHOD_RPC,
+  BLOCK_CLEANUP_THRESHOLD_DURATION,
+  BLOCK_CLEANUP_TRIM_COUNT_IN_ROUND,
+} from '../constants';
 
 const logger = DefaultLogger.getInstance().child(import.meta.url);
 
@@ -60,9 +65,19 @@ const buildBitcoinRpcScannerWithExtractors = async (dataSource: DataSource, toke
   });
   const bitcoinScanner = new BitcoinRpcScanner({
     dataSource: dataSource,
-    initialHeight: configs.chains.bitcoin.initialHeight,
+    initialHeight: configs.chains.bitcoin.initialHeight || 1,
     network: networkConnectorManager,
     blockRetrieveGap: configs.chains.bitcoin.blockRetrieveGap,
+    blockCleanupConfig:
+      configs.chains.bitcoin.blockCleanupActive === true
+        ? {
+            blockCleanupThresholdDuration: BLOCK_CLEANUP_THRESHOLD_DURATION,
+            blockTrimCountInRound: BLOCK_CLEANUP_TRIM_COUNT_IN_ROUND,
+          }
+        : {
+            blockCleanupThresholdDuration: BLOCK_CLEANUP_THRESHOLD_DURATION,
+            blockTrimCountInRound: 0,
+          },
     logger: logger.child('bitcoinRpcScannerLogger'),
   });
 
@@ -142,9 +157,19 @@ const buildBitcoinEsploraScannerWithExtractors = async (
   });
   const bitcoinScanner = new BitcoinEsploraScanner({
     dataSource: dataSource,
-    initialHeight: configs.chains.bitcoin.initialHeight,
+    initialHeight: configs.chains.bitcoin.initialHeight || 1,
     network: networkConnectorManager,
     blockRetrieveGap: configs.chains.bitcoin.blockRetrieveGap,
+    blockCleanupConfig:
+      configs.chains.bitcoin.blockCleanupActive === true
+        ? {
+            blockCleanupThresholdDuration: BLOCK_CLEANUP_THRESHOLD_DURATION,
+            blockTrimCountInRound: BLOCK_CLEANUP_TRIM_COUNT_IN_ROUND,
+          }
+        : {
+            blockCleanupThresholdDuration: BLOCK_CLEANUP_THRESHOLD_DURATION,
+            blockTrimCountInRound: 0,
+          },
     logger: logger.child('bitcoinEsploraScannerLogger'),
   });
 

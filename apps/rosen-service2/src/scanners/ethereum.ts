@@ -8,6 +8,7 @@ import type { TokenMap } from '@rosen-bridge/extended-tokens';
 import type { DataSource } from '@rosen-bridge/extended-typeorm';
 
 import { configs } from '../configs';
+import { BLOCK_CLEANUP_THRESHOLD_DURATION, BLOCK_CLEANUP_TRIM_COUNT_IN_ROUND } from '../constants';
 
 const logger = DefaultLogger.getInstance().child(import.meta.url);
 
@@ -35,9 +36,19 @@ export const getEthereumScanner = async (dataSource: DataSource, tokenMap: Token
   });
   const ethereumScanner = new EvmRpcScanner('ethereum', {
     dataSource: dataSource,
-    initialHeight: configs.chains.ethereum.initialHeight,
+    initialHeight: configs.chains.ethereum.initialHeight || 1,
     network: networkConnectorManager,
     blockRetrieveGap: configs.chains.ethereum.blockRetrieveGap,
+    blockCleanupConfig:
+      configs.chains.ethereum.blockCleanupActive === true
+        ? {
+            blockCleanupThresholdDuration: BLOCK_CLEANUP_THRESHOLD_DURATION,
+            blockTrimCountInRound: BLOCK_CLEANUP_TRIM_COUNT_IN_ROUND,
+          }
+        : {
+            blockCleanupThresholdDuration: BLOCK_CLEANUP_THRESHOLD_DURATION,
+            blockTrimCountInRound: 0,
+          },
     logger: logger.child('ethereumScannerLogger'),
   });
 
